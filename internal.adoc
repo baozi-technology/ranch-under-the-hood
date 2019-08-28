@@ -1,4 +1,4 @@
-[#chapter-three]
+[#chapter-two]
 = The internal documentation
 
 == Hey I am a section!

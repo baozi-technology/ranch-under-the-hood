@@ -1,4 +1,4 @@
-[#chapter-two]
+[#chapter-three]
 = The Examples
 
 To understand the code, better starting off knowing how to use the library!
