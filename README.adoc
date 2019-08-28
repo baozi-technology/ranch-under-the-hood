@@ -12,7 +12,7 @@ the reader can:
 
 WARNING: This analysis has been performed while I just started learning Erlang,
 right after going through https://learnyousomeerlang.com/[Learn You Some Erlang For Great Good].
-As a consequence, there may be some errors. Feedbacks are welcome!
+As a consequence, there may be some errors. Feedbacks are welcome! *WORK IN PROGRESS*
 
 == Licensing and Disclaimer
 
