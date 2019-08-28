@@ -1,0 +1,7 @@
+= Ranch: what's under the hood?
+
+include::intro_readme.adoc[]
+
+== A taste of what's coming...
+
+image:schema/Ranch_Summary_Architecture.jpg[title="How Ranch works?"]

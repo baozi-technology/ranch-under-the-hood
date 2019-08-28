@@ -1,0 +1,113 @@
+[#chapter-two]
+= The Examples
+
+To understand the code, better starting off knowing how to use the library!
+
+.We'll therefore go on and look at the two example project shipped with the source code:
+* tcp_echo
+* tcp_reverse
+
+The official documentation also extensively use them to explain the concepts.
+
+== TCP Echo Example
+
+Start a TCP acceptor pool that will echo anything sent to its underlying sockets.
+
+=== ebin/tcp_echo.app
+
+It is worth noticing here that the `ranch` dependency is part of the `applications` field, as expected.
+A quick check proves that the ranch binaries are available in the `deps/` directory.
+
+`tcp_echo_app` is the entry point of the application, as it is the
+value of the `mod` parameter.
+
+=== src/tcp_echo_app.erl
+
+That's the entry point of the application.
+The module implements the "application" API with the methods `start/2` and `stop/1` - as expected.
+
+In `start/2`, `ranch:start_listener/5` is called. That's the core of Ranch. It starts the pool of TCP/IP listener.
+Take note that the module `echo_protocol` is being passed as parameter.
+
+The next line `tcp_echo_sup:start_link()` basically starts a custom supervisor.
+
+Let's see the supervisor code.
+
+=== src/tcp_echo_sup.erl
+
+It's written as a dynamic supervisor, but...
+No child is ever added using `supervisor:start_child/2` in the rest of the files.
+So as is, this supervisor is useless...
+
+=== src/echo_protocol.erl
+
+This module was passed as parameter in `ranch:start_listener/5`.
+It implements the ranch protocol behaviour (`-behaviour(ranch_protocol)`).
+The entry point being `start_link/3` that basically spawn a linked process that will
+ultimately run `init/3`.
+Contrary to a traditional `gen_server` that's not `init/1` that's being called.
+
+`init/3` runs `ranch:handshake(Ref)` which most probably initiates the Socket acceptors...?
+Then it runs a recursive `loop` function, that simply pattern match the data being received.
+`Transport:recv(Socket, 0, 5000)` being probably a blocking operation, it just waits until data is received.
+
+Then, it reads the first data and if anything is received, echoes back the same message using `Transport:send(Socket, Data)`
+and start the same function `loop` again.
+Ultimately, when no data is received, it closes the socket using `Transport:close(Socket)`.
+Then it goes out of the loop and the process terminates.
+
+
+=== What did we learn?
+
+.Now, we know that:
+* `ranch:start_listener/5` must be used by the user, and is the starting point of the TCP/IP listener pool
+* as expected, `ranch_protocol` is a behaviour that people have to implement and then pass to `ranch:start_listener/5` as an argument.
+* `ranch:handshake/1` must be run when initializing the Protocol, before starting the connection process
+
+== TCP Reverse example
+
+Start a TCP acceptor pool that will echo
+the reversed version of anything sent to its underlying sockets.
+
+=== ebin/tcp_reverse.app
+
+Nothing much different from before here, just a basic `.app` file which tells us
+that `tcp_reverse_app` is the starting module of the application.
+
+=== src/tcp_reverse_app.erl
+
+Starting the ranch_listener, like before.
+Still using `ranch_tcp` transport, and this time the custom `reverse_protocol`.
+
+=== src/tcp_reverse_sup.erl
+
+Same as before. Useless supervisor here.
+
+=== src/reverse_protocol.erl
+
+This example is useful to show how to integrate a `gen_statem` custom protocol handler
+with Ranch.
+It would also work the same way for a `gen_server`.
+
+The https://ninenines.eu/docs/en/ranch/1.7/guide/protocols/#_using_gen_statem[official Ranch documentation]
+is enough.
+
+Read https://learnyousomeerlang.com/finite-state-machines[LYSEFGG] and
+http://erlang.org/doc/design_principles/statem.html[the official Erlang documentation]
+to know more about Finite State Machines and gen_statem.
+
+== Summary
+
+We can now already make a schema summarizing how the different notions integrate together,
+based on the examples and the documentation.
+
+image:schema/Ranch_Summary_Architecture.jpg[title="How Ranch works?"]
+
+.A few things to notice here:
+* the "Ranch server" part is not exactly a consequence of what we have seen so far,
+ but more of a glimpse of what's awaiting you in the next chapters!
+* the "supervising" and "monitoring" part here are to be understood in a very high-level way.
+We are not yet talking about how it actually works under-the-hood in terms of
+supervision tree between the modules. Still, I helps creating making a mental image
+of the architecture of Ranch.
+* the steps related to the Acceptor are also simplified and will be discussed further later

@@ -1,0 +1,262 @@
+[#chapter-one]
+= Introduction
+
+include::intro_readme.adoc[]
+
+== Prerequisites
+
+Having had basic experience
+in any development project with any programming language is highly recommended to grasp
+the following content.
+
+It is assumed that the reader have basic knowledge of Erlang/OTP as well as hands-on
+experience in managing TCP/IP sockets - or at least enough theoretical knowledge to understand
+their implementation (in any language).
+
+== What is Ranch about?
+
+Ranch is a "Socket acceptor pool for TCP protocols".
+It is at the foundation of the Erlang Web Server "Cowboy", that is itself
+at the foundation of the Elixir Web Framework "Phoenix".
+Both Web Server are widely used in the Erlang/Elixir community.
+
+There is an excellent manual maintained by the developers of the project.
+
+.I advice you to read this official documentation before continuing:
+* https://ninenines.eu/docs/en/ranch/2.0/guide/
+* https://ninenines.eu/docs/en/ranch/2.0/manual/
+
+However, it will not harm to summarize here the purpose of this library
+and describe the main concepts: Listener, Transport, Protocol, Acceptor, Pool, Connection...etc.
+I found it hard personally to understand how it all works together,
+so I'll explain it with my words here.
+
+Understanding these keywords and how they shape together is primordial to fathom the source code.
+Why? Because you'll see a lot of those here and there in the code.
+And it will be way more fuzzy in the codebase that it is in the documentation.
+The developers of the codebase expect you to know about the terms already.
+
+That's why, you would rather learn them before. When you see a variable named "Protocol",
+you'll then directly know what is its purpose, without having to finish the code analysis to do so.
+
+(Actually, that's a general truth in software development.
+You cannot write/read code efficiently if
+you don't master what it is about on the first place.)
+
+=== Description
+
+I will simply quote the official documentation:
+
+__________________________
+Ranch is a socket acceptor pool for TCP protocols.
+
+Ranch manages listeners which are a set of processes that accept and manage connections.
+The connection's transport and protocol modules are configured per listener.
+Listeners can be inspected and reconfigured without interruptions in service.
+__________________________
+
+It is worth emphasizing that Ranch manage a *pool* of listeners.
+
+=== Definitions
+
+==== Generic terms
+
+Let's remind us about some fundamentals here.
+
+===== Process
+
+It's the Erlang OTP process.
+
+Quoting the official Erlang documentation:
+__________________________
+Erlang is designed for massive concurrency.
+Erlang processes are lightweight (grow and shrink dynamically) with small memory footprint,
+fast to create and terminate, and the scheduling overhead is low.
+__________________________
+
+See: http://erlang.org/doc/reference_manual/processes.html
+
+===== Pool
+
+A pool, is a general programming concept frequently used.
+Quoting Wikipedia:
+
+__________________________
+A pool is a collection of resources that are kept ready to use,
+rather than acquired on use and released afterwards.
+__________________________
+
+In the context of Ranch, and even in general in Erlang/OTP,
+we will mainly talk about pools of processes.
+
+This might help:
+https://learnyousomeerlang.com/building-applications-with-otp
+
+==== Ranch-specific concepts
+
+Even though the following abstractions are seen in most
+networking librairies,
+their precise meaning in the context of their project differs from one to another.
+
+If you weren't already familiar with these notions,
+understanding what they are about in the context of Ranch
+will definitely help you identifying them in other libraries, or re-using them in new projects.
+
+===== Listener (process)
+
+Quoting the Ranch documentation:
+
+__________________________
+A listener is a set of processes that accept and manage connections.
+
+A listener is a set of processes whose role is to listen on a port for new connections.
+It manages a pool of acceptor processes, each of them indefinitely accepting connections.
+When it does, it starts a new process executing the protocol handler code.
+All the socket programming is abstracted through the use of transport handlers.
+__________________________
+
+It is worth emphasizing that each listener manage a *pool* of acceptor processes.
+
+===== Acceptor (process)
+
+.According to the quote above, we can say that
+* the role of an acceptor is to indefinitely accept connections
+* for each new connection being accepted, it starts and forwards the logic to a new process,
+named "connection process"
+
+It is interesting to notice that while it's the acceptor that starts the connection processes,
+it is the supervisor of the acceptor process, the listener, that supervises them:
+__________________________
+The listener takes care of supervising all the acceptor and connection processes, allowing developers to focus on building their application.
+__________________________
+
+===== Connection (process)
+
+Quoting from the listener definition above:
+__________________________
+[The connection process] executes the protocol handler code.
+All the socket programming is abstracted through the use of transport handlers.
+__________________________
+
+As seen above, it is started at each accepted connection by the acceptor process, and is supervised
+by the listener process.
+
+Its role is to actually implement the communication logic
+(what to do when receiving that message, or sending that other one, etc..).
+
+===== Protocol (handler)
+
+Quoting the Ranch documentation:
+__________________________
+A protocol handler starts a connection process and defines the protocol logic executed in this process.
+__________________________
+
+Actually this might be a little confusing at this point.
+Isn't it the acceptor process that's supposed to start the connection process???
+
+I found it hard to understand the distinction between a "connection process" and a "Protocol handler"
+in the documentation.
+Well, to better comprehend this, I've had to cheat and already dive a little bit into the code.
+I will give here the result of my research, to help you out!
+
+Basically, when they say in the quote above that "a protocol handler STARTS a connection process",
+you must somewhat understand "a protocol handler IS a connection process" instead.
+While it is not exactly true (the original sentence is correct),
+thinking this way personally helped me understand things better on the first place.
+
+The distinction is subtle.
+What happens, in fact, is that everytime a connection is accepted,
+the acceptor process will use a method from its corresponding "connection supervisor"
+to "start the protocol". This function will start the Protocol initially passed as parameter,
+by the end user of the library.
+This Protocol (which is NOT a gen_server), when started, will in turn spawn a linked process
+(like a gen_server does).
+This process is what's called the "connection process".
+This process shall embed all the protocol logic implemented by the user
+(like sending and receiving data). There is no requirement on what it does, it
+is left entirely to the user.
+
+It means that a Protocol is a sort of interface that the user has to implement
+and pass as a parameter when starting the pool of listeners.
+
+We can already expect such "interface" to be implemented as a custom `behaviour`.
+It is the idiomatic way of doing so in Erlang.
+
+====
+icon:question[3x]  Hey! Can you tell us more about how you found that out in the code?
+I am curious!  icon:question[3x]
+====
+
+
+Okay... If you insist :).
+
+See ranch_acceptor.erl line 41: `ranch_conns_sup:start_protocol/3` is being used
+in its `ranch_acceptor:loop/5` main method on success of `Transport:accept/2`.
+
+`ranch_conns_sup:start_protocol/3` is sending to himself a "start_protocol"
+type of message using the bang operator (`!`).
+Then, in its main `ranch_conns_sup:loop/4` method,
+this message is pattern matched in a `receive` block.
+
+On reception of the message, it is running `Protocol:start_link(Ref, Transport, Opts)`.
+(See ranch_conns_sup.erl line 122.) Protocol, being a parameter that was being pushed through from the beginning
+by the end user of the library using `ranch:start_listener/5`.
+
+A quick glance to ranch_protocol.erl and in the examples of the official documentation confirms that
+Protocol is the one process that's supposed to actually implement the user's high-level
+message sending and receiving logic.
+
+And `Protocol:start_link/3`, in the examples, like for gen_server,
+is spawning a new linked OTP process.
+
+=======
+Okay, let's wrap it up!
+=======
+
+The distinction between a Protocol handler and a connection process
+is therefore that a Protocol handler is the _interface_,
+and ultimately the _parameter (a simple variable)_
+being pushed through by the user. Being a parameter is the key that explain
+why it is called a "handler".
+In other words,
+it is a https://stackoverflow.com/questions/2044301/what-is-delegate[delegate]
+(generic programming notion).
+
+
+On the other side, the connection process
+is the actual OTP process being _spawned by the Protocol when the Protocol is started_.
+That's what they meant in the official documentation by saying that
+"the Protocol handler starts a connection process".
+
+=====  Transport (handler)
+
+Quoting the official documentation:
+__________________________
+A transport defines the interface to interact with a socket.
+
+Transports can be used for connecting, listening and accepting connections,
+but also for receiving and sending data.
+Both passive and active mode are supported,
+although all sockets are initialized as passive.
+__________________________
+
+In short, everywhere in the code when an actual action is needed towards the sockets
+(accepting the tcp/ip connection, sending, receiving messages...etc),
+such action is ultimately delegated to the Transport interface.
+When you read interface, like for Protocol, so you probably guess now that
+it is implemented as a custom behaviour.
+
+But contrary to Protocol, the user doesn't have to implement this behaviour in every situation.
+
+.The library already only exposes two sorts of transports that have implemented the custom Transport interface:
+* the TCP Transport (`ranch_tcp`)
+* the SSL Transport (`ranch_ssl`).
+
+Each of them are different modules that implemented the same behaviour.
+They are thin wrappers on top of the `gen_tcp` and `ssl` modules, which are
+the default erlang modules to do TCP/IP Socket programming and SSL encryption.
+
+However, users can write, if they wants, a custom transport handler.
+For that, they need to implement the `ranch_transport` behaviour and follow the
+the guide in the
+https://ninenines.eu/docs/en/ranch/1.4/guide/transports/#_writing_a_transport_handler[documentation].

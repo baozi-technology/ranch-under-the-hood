@@ -1,0 +1,4 @@
+[#chapter-three]
+= The internal documentation
+
+== Hey I am a section!
