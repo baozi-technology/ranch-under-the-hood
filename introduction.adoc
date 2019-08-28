@@ -16,9 +16,9 @@ their implementation (in any language).
 == What is Ranch about?
 
 Ranch is a "Socket acceptor pool for TCP protocols".
-It is at the foundation of the Erlang Web Server "Cowboy", that is itself
-at the foundation of the Elixir Web Framework "Phoenix".
-Both Web Server are widely used in the Erlang/Elixir community.
+It is at the foundation of the Erlang Web Server https://github.com/ninenines/cowboy[Cowboy], that is itself
+at the foundation of the Elixir Web Framework https://github.com/phoenixframework/phoenix[Phoenix].
+Both Web Servers are widely used in the Erlang/Elixir community.
 
 There is an excellent manual maintained by the developers of the project.
 
