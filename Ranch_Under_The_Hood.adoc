@@ -6,9 +6,9 @@ v1.0_draft1, August 2019
 
 include::introduction.adoc[]
 
-include::examples.adoc[]
-
 include::internal.adoc[]
+
+include::examples.adoc[]
 
 include::source_code.adoc[]
 

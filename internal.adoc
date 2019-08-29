@@ -1,4 +1,55 @@
 [#chapter-two]
 = The internal documentation
 
-== Hey I am a section!
+Ranch does not publish all its documentation to the internet.
+The file ranch/doc/src/guide/internals.asciidoc contains useful information for us!
+
+I'll just rewrite part of it with my own words here and double check them in the code.
+Feel free to skip that part if you prefer just reading it instead (it is quite short).
+
+== What do we learn from it?
+
+* When Ranch library starts, it starts the `ranch_server` module
+* Ranch has a top supervisor that is supervising `ranch_server` and all the listeners started
+
+"Ranch library starts" == Ranch is loaded as a dependency module by the end-user application
+
+== Okay, what else?
+
+.ETS Table:
+* there is an ETS table named `ranch_server` started on application startup by the module
+carrying the same name, and shared by all the application
+* it is own by the top application supervisor to avoid loss of information in case of restart.
+
+If you guys don't remember what's an ETS table,
+check https://learnyousomeerlang.com/ets[LYSEFGG] or http://erlang.org/doc/man/ets.html[the official documentation].
+
+.On managing connections:
+* there is a custom supervisor for managing connections. A glimpse at the code shows that it is `ranch_conns_sup_sup`.
+* it keeps track of the number of connections so it can handle connection limits.
+
+
+.Now about listeners:
+* listeners have their own supervisor, `ranch_listener_sup`
+* `ranch_listener_sup` starts three kind of processes:
+  ** the listener gen_server (cannot see track of it in the code???)
+  ** the acceptor process supervisor `ranch_acceptors_sup`, which in turn start the acceptor process
+  ** the connection process supervisor supervisor `ranch_conns_sup_sup`,
+  which in turn starts the connection supervisor `ranch_conns_sup`, which in turn starts the connection process through the Protocol.
+* `ranch_server` monitors some of these processes with various amount of information
+
+That part is quite cool and would have saved us from a lot of troubles earlier ;) :
+__________________________
+Protocol handlers start a new process, which receives socket
+ownership, with no requirements on how the code should be written inside
+that new process.
+__________________________
+
+Take note of the "socket ownership" part, it's rather important and interesting.
+If you have no clue what it means,
+read the end of https://learnyousomeerlang.com/buckets-of-sockets#tcp-sockets[this chapter]
+of LYSEFGG.
+It seems logical that it is the process that's ultimately taking care of the connection
+that become the owner of the socket.
+
+The info on Transport is nothing new for us at this point.
