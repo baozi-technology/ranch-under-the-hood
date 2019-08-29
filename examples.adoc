@@ -104,10 +104,8 @@ based on the examples and the documentation.
 image:schema/Ranch_Summary_Architecture.jpg[title="How Ranch works?"]
 
 .A few things to notice here:
-* the "Ranch server" part is not exactly a consequence of what we have seen so far,
- but more of a glimpse of what's awaiting you in the next chapters!
 * the "supervising" and "monitoring" part here are to be understood in a very high-level way.
 We are not yet talking about how it actually works under-the-hood in terms of
-supervision tree between the modules. Still, I helps creating making a mental image
-of the architecture of Ranch.
+supervision tree between the modules. Still, it helps creating a mental image
+of the Ranch architecture.
 * the steps related to the Acceptor are also simplified and will be discussed further later
