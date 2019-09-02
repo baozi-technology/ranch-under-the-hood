@@ -26,7 +26,7 @@ It is own by the top application supervisor to avoid loss of information in case
 If you guys don't remember what's an ETS table,
 check https://learnyousomeerlang.com/ets[LYSEFGG] or http://erlang.org/doc/man/ets.html[the official documentation].
 
-== On managing connections:
+== On managing connections
 There is a custom supervisor for managing connections. A glimpse at the code shows that it is `ranch_conns_sup_sup`.
 
 It keeps track of the number of connections so it can handle connection limits.
