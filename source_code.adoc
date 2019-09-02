@@ -1,10 +1,13 @@
 [#chapter-four]
 = Diving into Ranch Source code
 
-We'll simply navigate file by file,
-starting by the entry point of the application.
+.We'll follow these two distinct paths to study the code:
+* what happens when the library is loaded?
+* what happens when the user call `ranch:start_listener/5`?
 
-== ebin/ranch.app
+== What happens when the library is loaded?
+
+=== ebin/ranch.app
 
 This is the main file defining the project.
 Let's decrypt it together and remind ourselves what is the meaning of the different values.
@@ -35,7 +38,7 @@ Let's decrypt it together and remind ourselves what is the meaning of the differ
 
 Source: http://erlang.org/doc/man/app.html[Official Erlang Documentation]
 
-== ranch_app.erl
+=== ranch_app.erl
 
 Yep, it has `-behaviour(application)`, which makes sense because it is part of the `mod` parameter above.
 The file is quite small and easy to understand.
@@ -47,12 +50,12 @@ The file is quite small and easy to understand.
 That's the supervisor for the whole Ranch app.
 We can now start our supervisor tree:
 
-image:schema/Ranch_1.jpg[title="Start of supervision tree"]
+image:schema/Ranch_Source_1.jpg[title="Start of supervision tree"]
 
 See https://learnyousomeerlang.com/building-otp-applications#the-application-behaviour[LYSEFGG] for more info on the Application Master.
 Let's dive in ranch_sup to know what's behind these question marks.
 
-== ranch_sup.erl
+=== ranch_sup.erl
 
 As expected, it implements the `supervisor` behaviour.
 
@@ -66,7 +69,7 @@ is standard. No argument will be passed to `init/1`.
 `init/1` with an empty argument list will be run in the spawned supervisor process.
 We will now study its content.
 
-=== The restart intensity configuration parameters
+==== The restart intensity configuration parameters
 
 `application:get_env(ranch_sup_intensity)` is used to access the `ranch_sup_intensity` configuration parameter.
 Similarly the `ranch_sup_period` configuration parameter is being accessed.
@@ -90,7 +93,7 @@ demand for it."_
 * `application:set_env(ranch, ranch_sup_intensity, 10)`
 * `application:set_env(ranch, ranch_sup_period, 1)`
 
-=== The ChildSpec
+==== The ChildSpec
 
 The last parameter returned by `init/1` is the variable `Procs` that corresponds to
 what's called `ChildSpec` in the official Erlang documentation.
@@ -104,14 +107,18 @@ which is pretty standard.
 
 We can update our supervision tree:
 
-image:schema/Ranch_2.jpg[title="Start of supervision tree"]
+image:schema/Ranch_Source_2.jpg[title="Adding ranch_server"]
 
 
 It is also worth noticing that an ETS table is being initialized using `ets:new/2`.
 The ETS table is named after `ranch_server` module so it is expected that this module will be interacting with it.
 
+.From now on, we have two paths to study the code
 
-== ranch_server.erl
+
+We will start by `ranch_server`.
+
+=== ranch_server.erl
 
 The first thing to notice is that it implements `gen_server`, as expected by its name.
 
@@ -147,11 +154,14 @@ are added to the ETS table.
 To do so, we can search for "conns_sup" or "listener_sup" or "ets:insert" in the project.
 
 .The following appears in `ranch_server:handle_call/3`:
-* `State = set_monitored_process({conns_sup, Ref, Id}, Pid, State0)`
-* `State = set_monitored_process({listener_sup, Ref}, Pid, State0)`
+* `State = set_monitored_process({conns_sup, Ref, Id}, Pid, State0)` called by `ranch_server:set_connections_sup/3`, which is itself called by `ranch_conns_sup:init/7`
+* `State = set_monitored_process({listener_sup, Ref}, Pid, State0)` called by `ranch_server:set_listener_sup/2`, which is itself called by `ranch_listener_sup:init/1`
 
-`ranch_server:set_monitored_process/3` is simply making `ranch_server` process monitor the connection/listener supervisor,
-updates the ETS Table accordingly and returns the new updated state.
+`ranch_server:set_monitored_process/3` is simply making `ranch_server` monitor the connection/listener supervisor,
+update the ETS Table accordingly and return the new updated state.
+
+It is called on creation of the supervisors.
+
 
 .There are a few things I don't understand here:
 * Why is `erlang:monitor(process, Pid)` being called in `init/1`?
@@ -165,25 +175,14 @@ because `ranch_server:init/1`
 has to have finished running before the `ranch_server` gen_server becomes actually
 available for users, and before they can eventually call `ranch_server:handle_call/3`!
 Therefore, the returned initial state will be empty on start of `ranch_server` and the code
-that fetch the ETS Table is irrelevant... *Hmm, but what happens when `ranch_server` dies and is restarted by `ranch_sup`?
+that fetch the ETS Table is irrelevant...
+
+.Oh! I just found out!
+What happens when `ranch_server` dies and is restarted by `ranch_sup`?
 In this case, there will still be data in the ETS Table, data that will be monitored by...
 the `ranch_server` process that just died! So, basically not monitored at all!
 That's it! That's the reason why the use of `erlang:monitor(process, Pid)` in `ranch_server:init/1` does not stack with another monitoring.
-Its only (and important!) point is in case the process that was previously monitoring died!*
-
-We can now improve our schema:
-
-image:schema/Ranch_3.jpg[title="Start of supervision tree"]
-
-.The questions raised are now:
-* what is conns_sup? what is listenner_sup?
-* in which context are they initialized?
-
-For that we will search for `set_connections_sup` and `set_listener_sup` in the project.
-
-.We spot that:
- * `ranch_server:set_connections_sup/3` is used in `ranch_conns_sup:init/7`
- * `ranch_server:set_listener_sup/2` is used in `ranch_listener_sup:init/1`
+Its only (and important!) point is in case the process that was previously monitoring died!
 
 .A quick search also shows that `ranch_server:get_listener_sup/1` is used in:
 * `ranch:get_status/1`.
@@ -202,30 +201,93 @@ They are features.
 See the official documentation to know more about their usage.
 
 Finally, `ranch_server:get_connections_sup/2` is used by `ranch_acceptor:start_link/5`.
-We will see how and why later.
+If you remember well the previous chapter, the listener was the one that was creating
+the connection supervisor supervisor and the acceptor supervisor. Which means they were basically *creating* them.
+However, it is obviously the acceptor which needs to trigger the connection supervisor to *start* the connection process.
+So the acceptor has to know about a process that's neither his parent nor his child.
+That's why he needs to get it from an ETS table, that's handled by `ranch_server`!
 
-Now we need to answer the questions:
-- what is a listener? what is a connection? what is an acceptor?
-TODO explain that earlier in the guide
 
-== ranch_listener_sup.erl
+We can now improve our schema:
+
+image:schema/Ranch_Source_3.jpg[title="Adding ranch_conns_sup and ranch_listener_sup"]
+
+So, as expected after the study of the documentation,
+everytime a connection supervisor or a listener supervisor is started,
+it is registered within the `ranch_server`.
+
+Now we are wondering: when are they started?
+
+== What happens when the user call `ranch:start_listener/5`?
+
+=== ranch.erl
+
+That's the where all the API functions are stored.
+The most important one here being `ranch:start_listener/5`. Let's dive in its implementation.
+
+Open the source code, and look at it with me!
+
+It starts by "normalizing" the `TransportOpts0` parameter using `ranch:normalize_opts/1`.
+
+.It is simply the method that's responsible for handling the two different data structure containing the transport options you can pass to `ranch:start_listener/5`:
+* a list of socket options OR
+* a map
+
+The list of socket options being the old way, it is still handled by modern Ranch for backward compatibility purpose.
+
+Interestingly, `code:ensure_loaded(Transport)` is being used.
+If you are no idea what module loading, interactive and embedded mode are, then
+check the http://erlang.org/doc/man/code.html[official documentation].
+The commit message from Andrew Majorov  corresponding to the usage of this method is the following:
+__________________________
+Ensure transport module is loaded before checking exports
+
+Tests were constantly failing without this patch.
+It seems ct starts erlang code server in interactive mode, so application module loading
+is defered.
+__________________________
+
+It should be self-explanatory,
+but I found the whole usage of the `code` module interesting enough to point it out here!
+
+Then, once the Transport module loaded, the Transport options are being validated
+using `ranch:validate_transport_opts/1`.
+
+If it passes, then the method kindly asks the `ranch_sup` module
+to start the `ranch_listener_sup` supervisor using: `supervisor:start_child(ranch_sup, ChildSpec)`.
+
+WARNING: It was possible to use
+`ranch_sup` atom (= the reference for the process named `ranch_sup`) only
+because it is part of the `registered` parameter in the `ranch.app` file!
+
+The `maybe_started/1` method is just there for error reporting enhancement purpose.
+
+Hey! We can improve our little schema again!
+
+image:schema/Ranch_Source_4.jpg[title="Adding ranch_listener_sup"]
+
+
+=== ranch_listener_sup.erl
 
 It implements the `supervisor` behaviour, as expected.
 
 This file is very simple. It basically starts two children, both being supervisors:
-`ranch_conns_sup_sup` and `ranch_acceptors_sup`. The restart strategy is `rest_for_one`.
+`ranch_conns_sup_sup` and `ranch_acceptors_sup`.
+It was expected from the chapter dealing about the documentation.
+
+The restart strategy is `rest_for_one`.
 It means that if `ranch_conns_sup_sup` dies, then `ranch_acceptors_sup`
 will be terminated and then both will be restarted sequentially.
-However, if `ranch_acceptors_sup` dies it will be restarted but `ranch_conns_sup_sup` will not be affected.
+However, if `ranch_acceptors_sup` dies, it will be restarted but `ranch_conns_sup_sup` will not be affected.
 
-Before going forward with studying the files exposed here, let's wait for a minute
-and wonder how does this `ranch_listener_sup` module is being instanciated on the first place.
-It seems that it is a central part of the software, considering it is starting
-the supervisors that will ultimately start the listener socket.
+If a supervisor starts A, then B, and B depends on A, the _rest_for_one strategy_ is usually selected.
+Here, it is indeed used because `ranch_acceptor` relies on `ranch_conns_sup`.
+We will see later why.
+I anticipate a little bit here, as we wouldn't know just now.
 
-TODO rephrase this sentence earlier. Actually answer the question.
+We can update our schema!
 
-== ranch_conns_sup.erl
+=== ranch_conns_sup.erl
 
 As expected, it implements the `supervisor` behaviour.
 We notice that this file maintains a `state` record, that, in particular hold the Parent Pid
@@ -234,5 +296,3 @@ of this supervisor.
 It means that, this supervisor has a parent supervisor...
 A quick search shows that it is actually `ranch_conns_sup_sup` which instanciate it.
 We'll see in depth that later.
-
-TODO : rephrase the sentence above. Should have been answered earlier already.

@@ -1,7 +1,10 @@
 = Ranch: what's under the hood?
 
+Hi there! I am Nicolas - developer.
+
 This document is a summary of my analysis of https://github.com/ninenines/ranch[Ranch] 2.0.0-rc.1 source code, performed in August 2019.
-It has been done purely in an old-school manual way, cloning the project from github and going through it.
+It has been done purely in an old-school way, cloning the project from github
+and going through it manually.
 
 By helping understand the intricacy of a well-established but somewhat small Erlang library,
 the reader can:
@@ -14,11 +17,24 @@ WARNING: This analysis has been performed while I just started learning Erlang,
 right after going through https://learnyousomeerlang.com/[Learn You Some Erlang For Great Good].
 As a consequence, there may be some errors. Feedbacks are welcome! *WORK IN PROGRESS*
 
+== Where can I read it?
+
+I haven't published the e-book elsewhere yet, but I am working on it!
+
+For now you can only clone the project and run `asciidoctor Ranch_Under_The_Hood.adoc`
+in its main directory to generate a readable `Ranch_Under_The_Hood.html` file -
+provided you have https://asciidoctor.org/docs/install-toolchain/[Asciidoctor]
+ already installed on your computer.
+
+== A taste of what's coming...
+
+image:schema/Ranch_Summary_Architecture.jpg[title="How Ranch works?"]
+
 == Copyright and License
 
 === __Ranch: what's under the hood?__
 
-Copyright © 2019, Nicolas Gimenez <nicolas.gimenez@baozi.technology>. +
+Copyright © 2019, Baozi Technology SAS <nicolas.gimenez@baozi.technology>. +
 __"Ranch: what's under the hood?"__ is published under the
 link:LICENSE[Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License (CC BY-NC-SA 3.0)] +
 More information on the license can be found
@@ -31,9 +47,3 @@ which kindly encouraged me to publish this under-the-hood code analysis. +
 I am not (yet ;) ) a contributor of this project.
 I am not related to Nine Nines. +
 Click https://salt.bountysource.com/teams/ninenines[here] if you wish to support Ranch.
-
-
-
-== A taste of what's coming...
-
-image:schema/Ranch_Summary_Architecture.jpg[title="How Ranch works?"]
