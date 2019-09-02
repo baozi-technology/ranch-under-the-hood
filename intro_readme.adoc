@@ -25,7 +25,7 @@ More information on the license can be found
 === __Ranch__
 
 Ranch is copyrighted by https://github.com/essen[Loïc Hoguin],
-which kindly encouraged me to publish this under-the-hood code analysis. +
-I am not (yet ;) ) a contributor of this project.
+which kindly encouraged me to publish this code analysis. +
+I am not (yet ;)) a contributor of this project.
 I am not related to Nine Nines. +
 Click https://salt.bountysource.com/teams/ninenines[here] if you wish to support Ranch.

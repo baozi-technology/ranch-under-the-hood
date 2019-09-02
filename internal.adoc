@@ -7,29 +7,34 @@ The file ranch/doc/src/guide/internals.asciidoc contains useful information for 
 I'll just rewrite part of it with my own words here and double check them in the code.
 Feel free to skip that part if you prefer just reading it instead (it is quite short).
 
-== What do we learn from it?
+What do we learn from it
+
+== The Ranch Server
 
 * When Ranch library starts, it starts the `ranch_server` module
 * Ranch has a top supervisor that is supervising `ranch_server` and all the listeners started
 
 "Ranch library starts" == Ranch is loaded as a dependency module by the end-user application
 
-== Okay, what else?
+== The ETS Table
 
-.ETS Table:
-* there is an ETS table named `ranch_server` started on application startup by the module
+There is an ETS table named `ranch_server` started on application startup by the module
 carrying the same name, and shared by all the application
-* it is own by the top application supervisor to avoid loss of information in case of restart.
+
+It is own by the top application supervisor to avoid loss of information in case of restart.
 
 If you guys don't remember what's an ETS table,
 check https://learnyousomeerlang.com/ets[LYSEFGG] or http://erlang.org/doc/man/ets.html[the official documentation].
 
-.On managing connections:
-* there is a custom supervisor for managing connections. A glimpse at the code shows that it is `ranch_conns_sup_sup`.
-* it keeps track of the number of connections so it can handle connection limits.
+== On managing connections:
+There is a custom supervisor for managing connections. A glimpse at the code shows that it is `ranch_conns_sup_sup`.
+
+It keeps track of the number of connections so it can handle connection limits.
 
 
-.Now about listeners:
+== About listeners
+
+.There are a few relevant information concerning listeners:
 * listeners have their own supervisor, `ranch_listener_sup`
 * `ranch_listener_sup` starts three kind of processes:
   ** the listener gen_server (cannot see track of it in the code???)
