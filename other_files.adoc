@@ -1,0 +1,6 @@
+The other files are all related to the other `ranch` modules API.
+They are implementing the features other than simply calling `ranch:start_listener/5`.
+In the first version of this document, the analysis of those other functions is not included.
+
+Feel free to go on and contribute to this guide.
+You are more than welcome to add an issue our the GitHub repository and send a pull-request!

@@ -7,8 +7,6 @@ The file ranch/doc/src/guide/internals.asciidoc contains useful information for 
 I'll just rewrite part of it with my own words here and double check them in the code.
 Feel free to skip that part if you prefer just reading it instead (it is quite short).
 
-What do we learn from it
-
 == The Ranch Server
 
 * When Ranch library starts, it starts the `ranch_server` module

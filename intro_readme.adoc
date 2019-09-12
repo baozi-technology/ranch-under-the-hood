@@ -1,5 +1,8 @@
-This document is a summary of my analysis of Ranch 2.0.0-rc.1 source code, performed in August 2019.
-It has been done purely in an old-school manual way, cloning the project from github and going through it.
+Hi there! I am Nicolas - developer.
+
+This document is a summary of my analysis of https://github.com/ninenines/ranch[Ranch] 2.0.0-rc.1 source code, performed in August 2019.
+It has been done purely in an old-school way, cloning the project from github
+and going through it manually.
 
 By helping understand the intricacy of a well-established but somewhat small Erlang library,
 the reader can:
@@ -10,7 +13,7 @@ the reader can:
 
 WARNING: This analysis has been performed while I just started learning Erlang,
 right after going through https://learnyousomeerlang.com/[Learn You Some Erlang For Great Good].
-As a consequence, there may be some errors. Feedbacks are welcome!
+As a consequence, there may be some errors. Feedbacks are welcome! *WORK IN PROGRESS*
 
 == Copyright and License
 
@@ -18,9 +21,9 @@ As a consequence, there may be some errors. Feedbacks are welcome!
 
 Copyright © 2019, Nicolas Gimenez <nicolas.gimenez@baozi.technology>. +
 __"Ranch: what's under the hood?"__ is published under the
-link:LICENSE[Creative Commons Attribution-NonCommercial-ShareAlike 3.0 Unported License (CC BY-NC-SA 3.0)] +
-More information on the license can be found
- https://creativecommons.org/licenses/by-nc-sa/3.0/[here].
+link:LICENSE[Creative Commons Attribution-ShareAlike 3.0 Unported License (CC BY-SA 3.0)] +
+A human-readable version of the license can be found
+https://creativecommons.org/licenses/by-sa/3.0/[here].
 
 === __Ranch__
 

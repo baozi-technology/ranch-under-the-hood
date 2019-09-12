@@ -1,0 +1,272 @@
+=== ranch.erl
+
+That's the where all the API functions are stored.
+The most important one here being `ranch:start_listener/5`. Let's dive in its implementation.
+
+Open the source code, and look at it with me!
+
+It starts by "normalizing" the `TransportOpts0` parameter using `ranch:normalize_opts/1`.
+
+.It is simply the method that's responsible for handling the two different data structure containing the transport options you can pass to `ranch:start_listener/5`:
+* a list of socket options OR
+* a map
+
+The list of socket options being the old way, it is still handled by modern Ranch for backward compatibility purpose.
+
+Interestingly, `code:ensure_loaded(Transport)` is being used.
+If you are no idea what module loading, interactive and embedded mode are, then
+check the http://erlang.org/doc/man/code.html[official documentation].
+The commit message from Andrew Majorov  corresponding to the usage of this method is the following:
+__________________________
+Ensure transport module is loaded before checking exports
+
+Tests were constantly failing without this patch.
+It seems ct starts erlang code server in interactive mode, so application module loading
+is defered.
+__________________________
+
+It should be self-explanatory,
+but I found the whole usage of the `code` module interesting enough to point it out here!
+
+Then, once the Transport module loaded, the Transport options are being validated
+using `ranch:validate_transport_opts/1`.
+
+If it passes, then the method kindly asks the `ranch_sup` module
+to start the `ranch_listener_sup` supervisor using: `supervisor:start_child(ranch_sup, ChildSpec)`.
+
+WARNING: It was possible to use
+`ranch_sup` atom (= the reference for the process named `ranch_sup`) instead of the process Pid only
+because the process is locally registered as `ranch_sup`.
+That's because `ranch_sup:start_link/1` calls `supervisor:start_link({local, ?MODULE}, ?MODULE, [])`.
+See the http://erlang.org/doc/design_principles/sup_princ.html#starting-a-supervisor[official Erlang documentation].
+
+The `maybe_started/1` method is just there for error reporting enhancement purpose.
+
+Hey! We can improve our little schema again!
+
+image:schema/Ranch_Source_4.jpg[title="Adding ranch_listener_sup"]
+
+
+=== ranch_listener_sup.erl
+
+It implements the `supervisor` behaviour, as expected.
+
+This file is very simple. It basically starts two children, both being supervisors:
+`ranch_conns_sup_sup` and `ranch_acceptors_sup`.
+It was expected from the chapter dealing about the documentation.
+
+The restart strategy is `rest_for_one`.
+It means that if `ranch_conns_sup_sup` dies, then `ranch_acceptors_sup`
+will be terminated and then both will be restarted sequentially.
+However, if `ranch_acceptors_sup` dies, it will be restarted but `ranch_conns_sup_sup` will not be affected.
+
+If a supervisor starts A, then B, and B depends on A, the _rest_for_one strategy_ is usually selected.
+Here, it is indeed used because `ranch_acceptor` relies on `ranch_conns_sup`.
+We will see later how.
+I anticipate a little bit here, as we wouldn't know just now.
+
+We can update our schema!
+
+image:schema/Ranch_Source_5.jpg[title="Adding ranch_conns_sup_sup and ranch_acceptors_sup"]
+
+=== ranch_conns_sup_sup.erl
+
+This supervisor is starting the ranch_conns_sup supervisors.
+It starts by cleaning up all the ranch_conns_sup supervisors monitored by ranch_server.
+That's because if ranch_conns_sup_sup is restarted, all its children would have been been killed and restarted as well.
+
+.There are two Transport parameters being used here:
+* num_acceptors - used only to get the default value of num_conns_sups
+* num_conns_sups
+
+`num_acceptors` being defaulted at `10` while `num_conns_sups` is default to the current value of
+`num_acceptors`.
+
+As indicated by its name, `num_conns_sup` is the number of connection supervisor `ranch_conns_sup`
+being started by `ranch_conns_sup_sup` for each listener.
+
+I quote the official documentation:
+__________________________
+num_acceptors (10)::
+
+Number of processes that accept connections.
+
+num_conns_sups - see below::
+
+Number of processes that supervise connection processes.
+If not specified, defaults to be equal to `num_acceptors`.
+__________________________
+
+__________________________
+By default Ranch will use one connection supervisor for each
+acceptor process (but not vice versa). Their task is to
+supervise the connection processes started by an acceptor.
+The number of connection supervisors can be tweaked.
+
+Note that the association between the individual acceptors and
+connection supervisors is fixed, meaning that acceptors will
+always use the same connection supervisor to start connection
+processes.
+
+.Specifying a custom number of connection supervisors
+
+[source,erlang]
+{ok, _} = ranch:start_listener(tcp_echo,
+	ranch_tcp, #{socket_opts => [{port, 5555}], num_conns_sups => 42}],
+	echo_protocol, []
+).
+__________________________
+
+Also the following commit message from the 5th of August 2019 by "juhlig":
+
+__________________________
+
+Add the num_conns_sups option
+
+This new option allows configuring the number of connection supervisors.
+The old behavior can be obtained by setting this value to 1.
+A value larger than num_acceptors will result in some connection supervisors
+not being used as the acceptors currently only use one connection supervisor.
+__________________________
+
+I am not certain I fully understand the purpose of `num_conns_sups` at the moment -
+you will see why later.
+
+*Note that each `ranch_conns_sup` module being spawned is attributed an `Id` - passed as a parameter
+to `ranch_conns_sup:start_link/6` function.
+This `Id` is a digit ranging from 1 to the value of the
+maximum number of connection supervisors (`num_conns_sups`).*
+
+=== ranch_acceptors_sup.erl
+
+It implements the supervisor behaviour.
+
+This module's responsibility is to start the listenning socket(s) and then delegating
+the socket(s) responsibility to each of the corresponding the `ranch_acceptor` being spawned.
+
+.The file uses two Transport options:
+* `num_listen_sockets`: Ranch will simply create as many sockets as indicated in this option - and then start listening to each of them.
+See the documentation:
+__________________________
+The experimental `num_listen_sockets` option has been
+  added. It allows opening more than one listening socket
+  per listener. It can only be used alongside the Linux
+  `SO_REUSEPORT` socket option or equivalent. It allows
+  working around a bottleneck in the kernel and maximizes
+  resource usage, leading to increased rates for accepting
+  new connections.
+__________________________
+
+* `num_acceptors`: total number of `ranch_acceptor` module being spawned.
+One of the socket reference parameter previously created is passed to this module.
+*Note that each `ranch_acceptor` module being spawned is attributed an `AcceptorId` - passed as a parameter
+to `ranch_acceptor:start_link/5` function.
+This `AcceptorId` is a digit ranging from 1 to the value of the
+maximum number of acceptors (`num_acceptors`).*
+
+How do Ranch determines which socket reference to pass to the acceptor?
+The following code answers this question:
+
+[source,erlang]
+----
+LSocketId = (AcceptorId rem NumListenSockets) + 1
+----
+
+As you probably know, the remainder r of an euclidian division a/b is such as
+----
+0 <= r < b
+----
+therefore we have :
+----
+1 <= LSocketId <= NumListenSockets
+----
+which is what we were looking for.
+
+How is the distribution of LSocketId given AcceptorId is variable and NumListenSockets is constant?
+
+When it could seem obvious that this distribution is even, you'll read
+https://math.stackexchange.com/questions/32107/probability-distribution-for-the-remainder-of-a-fixed-integer[here]
+that it isn't. This specific post was in case AcceptorId would be constant instead of NumListenSockets.
+ I haven't been able to answer that question. If anyone has a glimpse, please start an issue on the GitHub repo!
+
+=== ranch_conns_sup.erl
+
+This file is rather unusual compared to what we faced until now.
+It does not implement the traditional supervisor behaviour.
+It's a so-called `special process`. This will be interesting!
+If you don't know anything about it, I recommend going through
+https://marcelog.github.io/articles/erlang_special_processes_tutorial_handling_system_messages.html[this article].
+I found it quite insightful.
+
+As seen earlier, `ranch_conns_sup:start_protocol/3` is called by `ranch_acceptor`.
+It ultimately calls `Protocol:start_link/3` - which starts the connection process.
+It is not started the usual way like a supervisor would do because we're using the delegate
+parameter.
+That's the reason why a special process is used here instead of a regular supervisor.
+
+This file is by far the most complex - and deserve all your attention.
+
+*Note that `ranch_conns_sup` registers itself to ranch_server's ETS Table on its initialization
+using `ranch_server:set_connections_sup/3`.*
+
+We notice that this module maintains a `state` record that in particular hold the Parent Pid
+of this supervisor -
+which is `ranch_conns_sup_sup` Pid. It also holds the Transport and Protocol options
+as well as the `max_conns` parameter and the logger.
+
+=== ranch_acceptor.erl
+
+Right at its initialization, this module calls
+`ranch_server:get_connections_sup(Ref, AcceptorId)`.
+
+I'll copy-paste the full implementation of the function here:
+
+[source,erlang]
+----
+get_connections_sup(Ref, Id) ->
+    ConnsSups = get_connections_sups(Ref),
+    NConnsSups = length(ConnsSups),
+    {_, Pid} = lists:keyfind((Id rem NConnsSups) + 1, 1, ConnsSups),
+    Pid.
+----
+
+As a matter of readability, I'll extend what `get_connections_sups(Ref)` is doing,
+and rename the parameter `Id` to what is really is, i.e `AcceptorId`:
+
+[source,erlang]
+----
+get_connections_sup(Ref, AcceptorId) ->
+    ConnsSups = [{Id, Pid} || [Id, Pid] <- ets:match(?TAB, {{conns_sup, Ref, '$1'}, '$2'})].
+    NConnsSups = length(ConnsSups),
+    {_, Pid} = lists:keyfind((AcceptorId rem NConnsSups) + 1, 1, ConnsSups),
+    Pid.
+----
+
+.Let's summarize. The following steps will happen in this sequential order:
+. First, `ranch_listener_sup` module will spawn `ranch_conns_sup_sup`
+.. `ranch_conns_sup_sup` will itself spawn `num_conns_sups` amount of connection supervisors `ranch_conns_sup`.
+.. During their initialization,  each connection supervisor
+will be assigned an unique Id ranging from 1 to `num_conns_sups`
+and will register its Id to the `ranch_server` `conns_sup` ETS Table.
+. Only after that, `ranch_listener_sup` will spawn `ranch_acceptors_sup`
+.. `ranch_acceptors_sup` will itself spawn `num_acceptors` amount of acceptors `ranch_acceptor`.
+.. During their initialization, each acceptor
+will be assigned an unique AcceptorId ranging from 1 to `num_acceptors`.
+and will call the above code with its own attributed AcceptorId. This code will simply
+pick a connection supervisor randomly (using the euclidian division remainder trick - like before)
+
+
+See the `ranch_listener_sup` booting order exposed earlier to understand why these two steps
+happen sequentially.
+
+.Now, how does `ranch_acceptor` use the connection supervisor? It's simple - let's just look at the `ranch_acceptor:loop/5` function.
+. It calls `Transport:accept(LSocket, infinity)` which is a blocking operation.
+. Then, on a new accepted connection, it calls `Transport:controlling_process(CSocket, ConnsSup)`
+to give control of the socket CSocket to ConnsSup, the connection supervisor previously picked.
+. Finally it calls `ranch_conns_sup:start_protocol(ConnsSup, MonitorRef,CSocket)` - that will basically start the connection process.
+
+
+
+
+
+
