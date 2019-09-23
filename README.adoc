@@ -32,7 +32,7 @@ image:schema/Ranch_Summary_Architecture.jpg[title="How Ranch works?"]
 
 == Contribute
 
-This code analysis is not comprehensive. I happily accept any pull-request that aim to add new contents or correct any issues. As for myself, I am not planning on adding new content for now but I am actively looking for people proof-reading the guide and pointing out gotchas to be fixed in the current covered parts. 
+This code analysis is not comprehensive. I happily accept any pull-request that aim to add new contents or correct any issues. As for myself, I am not planning on adding new content for now but I am actively looking for people proof-reading the guide and pointing out gotchas to be fixed in the parts currently covered. 
 
 == Copyright and License
 
