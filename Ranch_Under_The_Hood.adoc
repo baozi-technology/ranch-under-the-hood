@@ -1,5 +1,5 @@
 = Ranch: what's under the hood?
-Written by Nicolas Gimenez <nicolas.gimenez@baozi.technology>
+Nicolas Gimenez <nicolas.gimenez@baozi.technology>
 v1.0, August 2019
 :doctype: book
 :icons: font
@@ -13,6 +13,3 @@ include::examples.adoc[]
 include::source_code.adoc[]
 
 include::conclusion.adoc[]
-
-
-
