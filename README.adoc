@@ -40,7 +40,7 @@ image:https://about.draw.io/wp-content/uploads/2017/07/drawio_logo_50px.png[link
 
 Draw.io is the diagram application that allows us making cool schemas easily.
 
-image:logos/asciidoctor-logo-outline-color.png[link="https://about.draw.io", width="100"]
+image:logos/asciidoctor-logo-outline-color.png[link="https://asciidoctor.org/", width="100"]
 
 Asciidoctor is the plain text documentation syntax and processor we're using.
 
