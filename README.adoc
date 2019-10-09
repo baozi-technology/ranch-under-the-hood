@@ -28,7 +28,7 @@ provided you have https://asciidoctor.org/docs/install-toolchain/[Asciidoctor]
 
 == A taste of what's coming...
 
-image:schema/Ranch_Source_6.jpg[title="What happens on Ranch module startup and on calling ranch:start_listener/5?"]
+image:images/schema/Ranch_Source_6.jpg[title="What happens on Ranch module startup and on calling ranch:start_listener/5?"]
 
 == Contribute
 
