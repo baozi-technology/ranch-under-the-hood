@@ -41,7 +41,7 @@ The file is quite small and easy to understand.
 That's the supervisor for the whole Ranch app.
 We can now start our supervisor tree:
 
-image:schema/Ranch_Source_1.jpg[title="Start of supervision tree"]
+image:Ranch_Source_1.jpg[title="Start of supervision tree"]
 
 See https://learnyousomeerlang.com/building-otp-applications#the-application-behaviour[LYSEFGG] for more info on the Application Master.
 Let's dive in ranch_sup to know what's behind these question marks.
@@ -98,7 +98,7 @@ which is pretty standard.
 
 We can update our supervision tree:
 
-image:schema/Ranch_Source_2.jpg[title="Adding ranch_server"]
+image:Ranch_Source_2.jpg[title="Adding ranch_server"]
 
 
 It is also worth noticing that an ETS table is being initialized using `ets:new/2`.
@@ -201,7 +201,7 @@ That's why he needs to get it from an ETS table, that's handled by `ranch_server
 
 We can now improve our schema:
 
-image:schema/Ranch_Source_3.jpg[title="Adding ranch_conns_sup and ranch_listener_sup"]
+image:Ranch_Source_3.jpg[title="Adding ranch_conns_sup and ranch_listener_sup"]
 
 So, as expected after the study of the documentation,
 everytime a connection supervisor or a listener supervisor is started,

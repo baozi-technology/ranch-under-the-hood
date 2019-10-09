@@ -1,8 +1,19 @@
 = Ranch: what's under the hood?
 Nicolas Gimenez <nicolas.gimenez@baozi.technology>
 v1.0, August 2019
+:description: A deep dive into how the Erlang Ranch library internally works, by manually analysing its source code.
+:keywords: Ranch, ranch, under the hood, Ranch: what's under the hood?, cowboy, Cowboy, code analysis, analysis, manual study, study, ranch documentation, Ranch doc, ranch manual, software manual, source code analysis, Erlang, erlang, OTP, baozi technology
 :doctype: book
 :icons: font
+:sectlinks:
+:sectnums:
+:toc: left
+:toclevels: 2
+:sectanchors:
+:page-layout!:
+:source-highlighter: coderay
+:source-language: erlang
+:imagesdir: images/schema
 
 include::introduction.adoc[]
 

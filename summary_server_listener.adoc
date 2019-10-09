@@ -2,6 +2,6 @@ We can now finalize our schema. It will include all the parameters and logic we'
 in the two previous chapters.
 As a matter of simplicity, we'll consider that the user only uses `ranch:start_listener/5` once.
 
-image:schema/Ranch_Source_6.jpg[title="Ranch under the hood's structure"]
+image:Ranch_Source_6.jpg[title="Ranch under the hood's structure"]
 
 In the next chapter, we'll focus on the files we haven't studied before.

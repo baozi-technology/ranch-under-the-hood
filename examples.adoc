@@ -101,7 +101,7 @@ to know more about Finite State Machines and gen_statem.
 We can now already make a schema summarizing how the different notions integrate together,
 based on the examples and the documentation.
 
-image:schema/Ranch_Summary_Architecture.jpg[title="How Ranch works?"]
+image:Ranch_Summary_Architecture.jpg[title="How Ranch works?"]
 
 .A few things to notice here:
 * the "supervising" and "monitoring" part here are to be understood in a very high-level way.

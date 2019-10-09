@@ -44,7 +44,7 @@ The `maybe_started/1` method is just there for error reporting enhancement purpo
 
 Hey! We can improve our little schema again!
 
-image:schema/Ranch_Source_4.jpg[title="Adding ranch_listener_sup"]
+image:Ranch_Source_4.jpg[title="Adding ranch_listener_sup"]
 
 
 === ranch_listener_sup.erl
@@ -67,7 +67,7 @@ I anticipate a little bit here, as we wouldn't know just now.
 
 We can update our schema!
 
-image:schema/Ranch_Source_5.jpg[title="Adding ranch_conns_sup_sup and ranch_acceptors_sup"]
+image:Ranch_Source_5.jpg[title="Adding ranch_conns_sup_sup and ranch_acceptors_sup"]
 
 === ranch_conns_sup_sup.erl
 
@@ -167,7 +167,7 @@ maximum number of acceptors (`num_acceptors`).*
 How do Ranch determines which socket reference to pass to the acceptor?
 The following code answers this question:
 
-[source,erlang]
+[source]
 ----
 LSocketId = (AcceptorId rem NumListenSockets) + 1
 ----
@@ -221,7 +221,7 @@ Right at its initialization, this module calls
 
 I'll copy-paste the full implementation of the function here:
 
-[source,erlang]
+[source]
 ----
 get_connections_sup(Ref, Id) ->
     ConnsSups = get_connections_sups(Ref),
@@ -233,7 +233,7 @@ get_connections_sup(Ref, Id) ->
 As a matter of readability, I'll extend what `get_connections_sups(Ref)` is doing,
 and rename the parameter `Id` to what is really is, i.e `AcceptorId`:
 
-[source,erlang]
+[source]
 ----
 get_connections_sup(Ref, AcceptorId) ->
     ConnsSups = [{Id, Pid} || [Id, Pid] <- ets:match(?TAB, {{conns_sup, Ref, '$1'}, '$2'})].

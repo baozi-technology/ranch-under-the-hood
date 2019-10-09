@@ -28,7 +28,7 @@ provided you have https://asciidoctor.org/docs/install-toolchain/[Asciidoctor]
 
 == A taste of what's coming...
 
-image:schema/Ranch_Summary_Architecture.jpg[title="How Ranch works?"]
+image:Ranch_Summary_Architecture.jpg[title="How Ranch works?"]
 
 == Contribute
 
@@ -40,11 +40,11 @@ image:https://about.draw.io/wp-content/uploads/2017/07/drawio_logo_50px.png[link
 
 Draw.io is the diagram application that allows us making cool schemas easily.
 
-image:logos/asciidoctor-logo-outline-color.png[link="https://asciidoctor.org/", width="100"]
+image:images/logos/asciidoctor-logo-outline-color.png[link="https://asciidoctor.org/", width="100"]
 
 Asciidoctor is the plain text documentation syntax and processor we're using.
 
-image:logos/apple-touch-icon-57.png[link="https://ninenines.eu/", width="100"]
+image:images/logos/apple-touch-icon-57.png[link="https://ninenines.eu/", width="100"]
 
 Nine Nines is the company behind Ranch. Thanks to all the Ranch contributors for making this software!
 

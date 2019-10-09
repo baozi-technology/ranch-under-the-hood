@@ -5,7 +5,7 @@ include::intro_readme.adoc[]
 
 == TL;DR
 
-Please, refer to the link:conclusion.adoc[conclusion].
+Please, refer to the <<chapter-five>>.
 
 
 == Prerequisites
