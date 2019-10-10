@@ -15,7 +15,7 @@ v1.0, August 2019
 :source-highlighter: coderay
 :source-language: erlang
 :imagesdir: images/schema
-// :data-uri: to be passed manually when using the ruby asciidoctor cli for photos to be directly included in html
+// :data-uri: to be passed manually when using the ruby asciidoctor cli for images to be directly included in html
 
 include::introduction.adoc[]
 
