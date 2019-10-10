@@ -11,6 +11,7 @@ the reader can:
 * be able to help maintaining Ranch
 * be able to reuse Ranch codebase or get inspired by it for other projects
 
+:warning-caption: pass:[<span style="font-size: 4em">&#9888;</span>]
 WARNING: This analysis has been performed while I just started learning Erlang,
 right after going through https://learnyousomeerlang.com/[Learn You Some Erlang For Great Good].
 If you find any errors, a pull-request or a new GitHub issue is welcome! ;)
