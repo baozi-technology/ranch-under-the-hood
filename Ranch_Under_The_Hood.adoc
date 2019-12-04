@@ -7,7 +7,7 @@ v1.0, August 2019
 // :icons: does not work in embedded mode (--embedded or -s or --no-header-footer)
 :sectlinks:
 :sectnums:
-// :toc: left does not work in embedded mode
+// :toc: left
 :toc: macro
 :toclevels: 2
 :sectanchors:
@@ -16,6 +16,8 @@ v1.0, August 2019
 :source-language: erlang
 :imagesdir: images/schema
 // :data-uri: to be passed manually when using the ruby asciidoctor cli for images to be directly included in html
+
+toc::[]
 
 include::introduction.adoc[]
 

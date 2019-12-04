@@ -22,9 +22,7 @@ If you find any errors, a pull-request or a new GitHub issue is welcome! ;)
 
 Copyright © 2019, Nicolas Gimenez <nicolas.gimenez@baozi.technology>. +
 __"Ranch: what's under the hood?"__ is published under the
-link:LICENSE[Creative Commons Attribution-ShareAlike 3.0 Unported License (CC BY-SA 3.0)] +
-A human-readable version of the license can be found
-https://creativecommons.org/licenses/by-sa/3.0/[here].
+https://creativecommons.org/licenses/by-sa/3.0/[Creative Commons Attribution-ShareAlike 3.0 Unported License (CC BY-SA 3.0)] +
 
 === __Ranch__
 
