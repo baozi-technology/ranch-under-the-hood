@@ -23,4 +23,4 @@ This work is distributed under the same license as _Ranch_ itself, https://opens
 Ranch was originally built by https://github.com/essen[Loïc Hoguin],
 which kindly encouraged me to publish this code analysis. +
 I am not related to Nine Nines. +
-hhttps://ninenines.eu/donate/[Donate] if you wish to support Ranch.
+https://ninenines.eu/donate/[Donate] if you wish to support Ranch.
