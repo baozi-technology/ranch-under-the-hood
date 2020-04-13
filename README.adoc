@@ -1,7 +1,5 @@
 = Ranch: what's under the hood?
 
-Hi there! I am Nicolas - developer.
-
 This document is a summary of my analysis of https://github.com/ninenines/ranch[Ranch] 2.0.0-rc.1 source code, performed in August 2019.
 It has been done purely in an old-school way, cloning the project from github
 and going through it manually.
@@ -19,12 +17,7 @@ If you find any errors, a pull-request or a new GitHub issue is welcome! ;)
 
 == Where can I read it?
 
-I haven't published the e-book elsewhere yet, but I am working on it!
-
-For now you can only clone the project and run `asciidoctor Ranch_Under_The_Hood.adoc`
-in its main directory to generate a readable `Ranch_Under_The_Hood.html` file -
-provided you have https://asciidoctor.org/docs/install-toolchain/[Asciidoctor]
- already installed on your computer.
+https://baozi.technology/ranch-under-the-hood[This page] contains the latest version of the guide.
 
 == A taste of what's coming...
 
@@ -48,20 +41,11 @@ image:images/logos/apple-touch-icon-57.png[link="https://ninenines.eu/", width="
 
 Nine Nines is the company behind Ranch. Thanks to all the Ranch contributors for making this software!
 
-== Copyright and License
+== License and disclaimer
 
-=== __Ranch: what's under the hood?__
+This work is distributed under the same license as _Ranch_ itself, link:LICENSE[ISC License].
 
-Copyright © 2019, Nicolas Gimenez <nicolas.gimenez@baozi.technology>. +
-__"Ranch: what's under the hood?"__ is published under the
-link:LICENSE[Creative Commons Attribution-ShareAlike 3.0 Unported License (CC BY-SA 3.0)] +
-A human-readable version of the license can be found
-https://creativecommons.org/licenses/by-sa/3.0/[here].
-
-=== __Ranch__
-
-Ranch is copyrighted by https://github.com/essen[Loïc Hoguin],
+Ranch was originally built by https://github.com/essen[Loïc Hoguin],
 which kindly encouraged me to publish this code analysis. +
-I am not (yet ;)) a contributor of this project.
 I am not related to Nine Nines. +
-Click https://salt.bountysource.com/teams/ninenines[here] if you wish to support Ranch.
+https://salt.bountysource.com/teams/ninenines[Donate] if you wish to support Ranch.
