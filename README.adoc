@@ -17,7 +17,7 @@ If you find any errors, a pull-request or a new GitHub issue is welcome! ;)
 
 == Where can I read it?
 
-https://baozi.technology/ranch-under-the-hood[This page] contains the latest version of the guide.
+Build it locally or go through the .adoc from GitHub.
 
 == A taste of what's coming...
 
